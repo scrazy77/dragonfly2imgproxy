@@ -1,0 +1,8 @@
+displayName: Dragonfly to Imgproxy
+summary: Plugin to translate Dragonfly url to Imgproxy
+type: middleware
+import: github.com/scrazy77/dragonfly2imgproxy
+compatibility: TODO
+testData:
+  dragonflySecret: "examplesecret"
+  uRLPrefix: "https://example.com"
