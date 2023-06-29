@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // Config configures the middleware.
@@ -38,7 +39,7 @@ type Dragonfly2imgproxy struct {
 // New returns a plugin instance.
 func New(_ context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	if len(config.DragonflySecret) == 0 {
-		return nil, errors.New("DragonflySecret required.")
+		return nil, errors.New("DragonflySecret required")
 	}
 
 	return &Dragonfly2imgproxy{
@@ -99,11 +100,14 @@ func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request
 func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 	imgproxy_url := url_prefix
 	thumb_operation := ""
+	var is_gif = false
 	for _, job := range jobs {
 		if job[0] == "f" { //fetch image
 			imgproxy_url += job[1]
-			//imgproxy_url = url.QueryEscape(imgproxy_url)
 			imgproxy_url = "/plain/" + imgproxy_url
+			if strings.HasSuffix(imgproxy_url, ".gif") {
+				is_gif = true
+			}
 		} else if job[0] == "p" { // process image
 			if job[1] == "thumb" { // thumb only
 				regex := regexp.MustCompile(`^(\d+)x(|\d+)(|>|#)$`)
@@ -121,6 +125,9 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 					thumb_operation += "/rs:fill:" + width + ":" + height + ":g:ce"
 				} else {
 					thumb_operation += "/rs:fit:" + width + ":" + height
+				}
+				if is_gif { // force gif format
+					thumb_operation += "/f:gif"
 				}
 			}
 		}
