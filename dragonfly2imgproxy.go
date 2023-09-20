@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -104,7 +105,7 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 	for _, job := range jobs {
 		if job[0] == "f" { //fetch image
 			imgproxy_url += job[1]
-			imgproxy_url = "/plain/" + imgproxy_url
+			imgproxy_url = "/plain/" + url.QueryEscape(imgproxy_url)
 			if strings.HasSuffix(imgproxy_url, ".gif") {
 				is_gif = true
 			}
