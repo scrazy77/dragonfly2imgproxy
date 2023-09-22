@@ -107,7 +107,7 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 		if job[0] == "f" { //fetch image
 			filePath := job[1]
 			dir, fileName := filepath.Split(filePath)
-			encodedFileName := url.QueryEscape(fileName)
+			encodedFileName := url.PathEscape(fileName)
 			encodedFilePath := filepath.Join(dir, encodedFileName)
 			imgproxy_url += encodedFilePath
 			imgproxy_url = "/plain/" + imgproxy_url
