@@ -100,9 +100,6 @@ func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request
 
 func customEscape(s string) string {
 	encoded := url.QueryEscape(s)
-	// % -> %25
-	encoded = strings.ReplaceAll(encoded, "%", "%25")
-	fmt.Println(encoded)
 	// space -> %20
 	encoded = strings.ReplaceAll(encoded, "+", "%20")
 	return encoded
