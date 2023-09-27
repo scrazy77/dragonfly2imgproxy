@@ -98,6 +98,16 @@ func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request
 	d.next.ServeHTTP(rw, req)
 }
 
+func customEscape(s string) string {
+	encoded := url.QueryEscape(s)
+	// % -> %25
+	encoded = strings.ReplaceAll(encoded, "%", "%25")
+	fmt.Println(encoded)
+	// space -> %20
+	encoded = strings.ReplaceAll(encoded, "+", "%20")
+	return encoded
+}
+
 // Generate imgproxy url
 func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 	imgproxy_url := url_prefix
@@ -107,7 +117,7 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 		if job[0] == "f" { //fetch image
 			filePath := job[1]
 			dir, fileName := filepath.Split(filePath)
-			encodedFileName := url.QueryEscape(url.PathEscape(fileName))
+			encodedFileName := customEscape(fileName)
 			encodedFilePath := filepath.Join(dir, encodedFileName)
 			imgproxy_url += encodedFilePath
 			imgproxy_url = "/plain/" + imgproxy_url
