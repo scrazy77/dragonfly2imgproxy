@@ -55,7 +55,8 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 // ServeHTTP serves an HTTP request.
 func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
-	regex := regexp.MustCompile(`\/media\/(.+?)\.(gif|png|jpeg|jpg|webp|avif)\?sha=(\w+)`)
+	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif)?\?sha=(\w+)`)
+
 	match := regex.FindStringSubmatch(req.URL.Path + "?" + req.URL.RawQuery)
 	if len(match) < 4 {
 		log.Println("Failed to extract base64 string and SHA from URL. match=" + strconv.Itoa((len(match))))
