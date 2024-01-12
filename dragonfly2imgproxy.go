@@ -93,7 +93,7 @@ func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request
 	log.Println("generate imgproxy url=" + imgproxy_url)
 	// auto_convert=false replace Accept header with only traditional image format
 	if req.URL.Query().Get("auto_convert") == "false" {
-		req.Header.Set("Accept", "image/png, image/jpeg, image/gif")
+		req.Header.Del("Accept")
 	}
 	req.URL.Path = imgproxy_url
 	req.URL.RawQuery = "" // clean query string
