@@ -55,17 +55,25 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 // ServeHTTP serves an HTTP request.
 func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
-	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif)?\?sha=(\w+)`)
+	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif)`)
 
-	match := regex.FindStringSubmatch(req.URL.Path + "?" + req.URL.RawQuery)
-	if len(match) < 4 {
-		log.Println("Failed to extract base64 string and SHA from URL. match=" + strconv.Itoa((len(match))))
-		http.Error(rw, "Failed to extract base64 string and SHA from URL.", http.StatusInternalServerError)
+	// Get base64 from url path
+	match := regex.FindStringSubmatch(req.URL.Path)
+	if len(match) < 3 {
+		log.Println("Failed to extract base64 string from URL. match=" + strconv.Itoa((len(match))))
+		http.Error(rw, "Failed to extract base64 string from URL.", http.StatusInternalServerError)
 		return
 	}
 	base64String := match[1]
 
-	sha := match[3]
+	// Get sha from query string
+	sha := req.URL.Query().Get("sha")
+	if len(sha) == 0 {
+		log.Println("Failed to get sha from query string.")
+		http.Error(rw, "Failed to get sha from query string.", http.StatusInternalServerError)
+		return
+	}
+
 	// Base64 decode jobs
 	jobBytes, err := base64.RawURLEncoding.DecodeString(base64String)
 	if err != nil {
