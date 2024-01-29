@@ -55,7 +55,7 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 // ServeHTTP serves an HTTP request.
 func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
-	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif)?\?`)
+	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif)*$`)
 
 	// Get base64 from url path
 	match := regex.FindStringSubmatch(req.URL.Path)
