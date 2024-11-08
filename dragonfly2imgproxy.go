@@ -106,7 +106,7 @@ func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request
 	}
 	req.URL.Path = imgproxy_url
 	req.URL.RawQuery = "" // clean query string
-	req.RequestURI = req.URL.RequestURI()
+	req.RequestURI = imgproxy_url
 
 	d.next.ServeHTTP(rw, req)
 }
