@@ -55,7 +55,7 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 // ServeHTTP serves an HTTP request.
 func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
-	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif)*$`)
+	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif|.svg)*$`)
 
 	// Get base64 from url path
 	match := regex.FindStringSubmatch(req.URL.Path)
@@ -133,6 +133,9 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 			imgproxy_url = "/plain/" + imgproxy_url
 			if strings.HasSuffix(imgproxy_url, ".gif") {
 				is_gif = true
+			}
+			if strings.HasSuffix(imgproxy_url, ".svg") {
+				imgproxy_url += "/f:svg"
 			}
 		} else if job[0] == "p" { // process image
 			if job[1] == "thumb" { // thumb only
