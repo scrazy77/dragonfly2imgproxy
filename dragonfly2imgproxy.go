@@ -123,6 +123,7 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 	imgproxy_url := url_prefix
 	thumb_operation := ""
 	var is_gif = false
+	var is_svg = false
 	for _, job := range jobs {
 		if job[0] == "f" { //fetch image
 			filePath := job[1]
@@ -135,7 +136,7 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 				is_gif = true
 			}
 			if strings.HasSuffix(imgproxy_url, ".svg") {
-				imgproxy_url += "/f:svg"
+				is_svg = true
 			}
 		} else if job[0] == "p" { // process image
 			if job[1] == "thumb" { // thumb only
@@ -160,6 +161,9 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 				}
 			}
 		}
+	}
+	if is_svg {
+		imgproxy_url = "/f:svg" + imgproxy_url
 	}
 	return "/insecure" + thumb_operation + imgproxy_url
 }
