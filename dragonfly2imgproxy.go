@@ -133,7 +133,8 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 	var is_gif = false
 	var is_svg = false
 	for _, job := range jobs {
-		if job[0] == "f" { //fetch image
+		switch job[0] {
+		case "f": //fetch image
 			filePath := job[1]
 			dir, fileName := filepath.Split(filePath)
 			encodedFileName := customEscape(fileName)
@@ -146,21 +147,23 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 			if strings.HasSuffix(imgproxy_url, ".svg") {
 				is_svg = true
 			}
-		} else if job[0] == "p" { // process image
+		case "p": // process image
 			if job[1] == "thumb" { // thumb only
 				match := thumbRegex.FindStringSubmatch(job[2])
-				if len(match) < 1 {
-					fmt.Println("Failed to extract job")
+				if match == nil {
+					// 記錄錯誤，但繼續處理，避免單一錯誤的 thumb 參數導致整個請求失敗
+					log.Printf("[dragonfly2imgproxy] Failed to parse thumb geometry: %s", job[2])
 					return "Failed to extract job"
 				}
 				width := match[1]
 				height := match[2]
 				operation := match[3] // only support > #
-				if operation == ">" {
+				switch operation {
+				case ">":
 					thumb_operation += "/rs:fit:" + width + ":" + height + ":0"
-				} else if operation == "#" {
+				case "#":
 					thumb_operation += "/rs:fill:" + width + ":" + height + ":g:ce"
-				} else {
+				default:
 					thumb_operation += "/rs:fit:" + width + ":" + height
 				}
 				if is_gif { // force gif format
@@ -179,9 +182,10 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 func calculateSHA(secret string, jobs [][]string) string {
 	message := ""
 	for _, job := range jobs {
-		if job[0] == "f" { // fetch + url
+		switch job[0] {
+		case "f": // fetch + url
 			message += "f" + job[1]
-		} else if job[0] == "p" { // process + thumb + size
+		case "p": // process + thumb + size
 			message += "p" + job[1] + job[2]
 		}
 	}
