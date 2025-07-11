@@ -18,6 +18,16 @@ import (
 	"strings"
 )
 
+// 正規表示式應該在全域或初始化時編譯一次，避免在每次請求中重複編譯。
+var (
+	// 用於解析 Dragonfly URL 中的 Base64 字串
+	// e.g., /media/BASE64STRING.jpg
+	urlRegex = regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif|.svg)*$`)
+	// 用於解析 Dragonfly 的 'thumb' 參數
+	// e.g., 400x300#
+	thumbRegex = regexp.MustCompile(`^(\d+)x(|\d+)(|>|#)$`)
+)
+
 // Config configures the middleware.
 type Config struct {
 	DragonflySecret string `json:"dragonflySecret" yaml:"dragonflySecret" toml:"dragonflySecret"`
@@ -55,10 +65,8 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 // ServeHTTP serves an HTTP request.
 func (d *Dragonfly2imgproxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
-	regex := regexp.MustCompile(`\/media\/(.+?)(\.gif|.png|.jpeg|.jpg|.webp|.avif|.svg)*$`)
-
 	// Get base64 from url path
-	match := regex.FindStringSubmatch(req.URL.Path)
+	match := urlRegex.FindStringSubmatch(req.URL.Path)
 	if len(match) < 3 {
 		log.Println("Failed to extract base64 string from URL. match=" + strconv.Itoa((len(match))))
 		http.Error(rw, "Failed to extract base64 string from URL.", http.StatusInternalServerError)
@@ -140,8 +148,7 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 			}
 		} else if job[0] == "p" { // process image
 			if job[1] == "thumb" { // thumb only
-				regex := regexp.MustCompile(`^(\d+)x(|\d+)(|>|#)$`)
-				match := regex.FindStringSubmatch(job[2])
+				match := thumbRegex.FindStringSubmatch(job[2])
 				if len(match) < 1 {
 					fmt.Println("Failed to extract job")
 					return "Failed to extract job"
