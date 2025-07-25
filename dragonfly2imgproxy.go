@@ -128,10 +128,14 @@ func customEscape(s string) string {
 
 // Generate imgproxy url
 func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
-	imgproxy_url := url_prefix
-	thumb_operation := ""
+	var urlBuilder strings.Builder
+	var thumbBuilder strings.Builder
+	
+	urlBuilder.WriteString(url_prefix)
+	
 	var is_gif = false
 	var is_svg = false
+	
 	for _, job := range jobs {
 		switch job[0] {
 		case "f": //fetch image
@@ -139,12 +143,12 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 			dir, fileName := filepath.Split(filePath)
 			encodedFileName := customEscape(fileName)
 			encodedFilePath := filepath.Join(dir, encodedFileName)
-			imgproxy_url += encodedFilePath
-			imgproxy_url = "/plain/" + imgproxy_url
-			if strings.HasSuffix(imgproxy_url, ".gif") {
+			urlBuilder.WriteString(encodedFilePath)
+			
+			if strings.HasSuffix(filePath, ".gif") {
 				is_gif = true
 			}
-			if strings.HasSuffix(imgproxy_url, ".svg") {
+			if strings.HasSuffix(filePath, ".svg") {
 				is_svg = true
 			}
 		case "p": // process image
@@ -158,37 +162,64 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 				width := match[1]
 				height := match[2]
 				operation := match[3] // only support > #
+				
+				thumbBuilder.WriteString("/rs:")
 				switch operation {
 				case ">":
-					thumb_operation += "/rs:fit:" + width + ":" + height + ":0"
+					thumbBuilder.WriteString("fit:")
+					thumbBuilder.WriteString(width)
+					thumbBuilder.WriteString(":")
+					thumbBuilder.WriteString(height)
+					thumbBuilder.WriteString(":0")
 				case "#":
-					thumb_operation += "/rs:fill:" + width + ":" + height + ":g:ce"
+					thumbBuilder.WriteString("fill:")
+					thumbBuilder.WriteString(width)
+					thumbBuilder.WriteString(":")
+					thumbBuilder.WriteString(height)
+					thumbBuilder.WriteString(":g:ce")
 				default:
-					thumb_operation += "/rs:fit:" + width + ":" + height
+					thumbBuilder.WriteString("fit:")
+					thumbBuilder.WriteString(width)
+					thumbBuilder.WriteString(":")
+					thumbBuilder.WriteString(height)
 				}
 				if is_gif { // force gif format
-					thumb_operation += "/f:gif"
+					thumbBuilder.WriteString("/f:gif")
 				}
 			}
 		}
 	}
+	
+	// Build final URL
+	var finalBuilder strings.Builder
+	finalBuilder.WriteString("/insecure")
+	finalBuilder.WriteString(thumbBuilder.String())
+	
 	if is_svg {
-		imgproxy_url = "/f:svg" + imgproxy_url
+		finalBuilder.WriteString("/f:svg")
 	}
-	return "/insecure" + thumb_operation + imgproxy_url
+	
+	finalBuilder.WriteString("/plain/")
+	finalBuilder.WriteString(urlBuilder.String())
+	
+	return finalBuilder.String()
 }
 
 // calculateSHA
 func calculateSHA(secret string, jobs [][]string) string {
-	message := ""
+	var builder strings.Builder
 	for _, job := range jobs {
 		switch job[0] {
 		case "f": // fetch + url
-			message += "f" + job[1]
+			builder.WriteString("f")
+			builder.WriteString(job[1])
 		case "p": // process + thumb + size
-			message += "p" + job[1] + job[2]
+			builder.WriteString("p")
+			builder.WriteString(job[1])
+			builder.WriteString(job[2])
 		}
 	}
+	message := builder.String()
 	// calculate
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(message))
