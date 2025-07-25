@@ -139,6 +139,9 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 	for _, job := range jobs {
 		switch job[0] {
 		case "f": //fetch image
+			if len(job) < 2 {
+				continue
+			}
 			filePath := job[1]
 			dir, fileName := filepath.Split(filePath)
 			encodedFileName := customEscape(fileName)
@@ -152,6 +155,9 @@ func generate_imgproxy_url(url_prefix string, jobs [][]string) string {
 				is_svg = true
 			}
 		case "p": // process image
+			if len(job) < 3 {
+				continue
+			}
 			if job[1] == "thumb" { // thumb only
 				match := thumbRegex.FindStringSubmatch(job[2])
 				if match == nil {
@@ -211,12 +217,16 @@ func calculateSHA(secret string, jobs [][]string) string {
 	for _, job := range jobs {
 		switch job[0] {
 		case "f": // fetch + url
-			builder.WriteString("f")
-			builder.WriteString(job[1])
+			if len(job) >= 2 {
+				builder.WriteString("f")
+				builder.WriteString(job[1])
+			}
 		case "p": // process + thumb + size
-			builder.WriteString("p")
-			builder.WriteString(job[1])
-			builder.WriteString(job[2])
+			if len(job) >= 3 {
+				builder.WriteString("p")
+				builder.WriteString(job[1])
+				builder.WriteString(job[2])
+			}
 		}
 	}
 	message := builder.String()
